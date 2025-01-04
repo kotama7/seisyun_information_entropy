@@ -6,8 +6,8 @@ from scipy.stats import gmean
 from transformers import pipeline
 
 
-def seisyun():
-    recur = random.randint(1, 10)
+def seisyun(mask_num):
+    recur = random.randint(1, mask_num)
     K_RANGE = 100
 
     masks = ""

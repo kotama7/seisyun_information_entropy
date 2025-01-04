@@ -3,8 +3,11 @@ import torch
 import pandas as pd
 
 from transformers import AutoModelForCausalLM, AutoTokenizer
+from .set_seed import set_seed
 
-def paired_comparison(df):
+import random
+
+def paired_comparison(df, default_seed, evaluater_num):
 
     DEFAULT_SYSTEM_PROMPT = "あなたは誠実で優秀な日本人のアシスタントです。特に指示が無い場合は、常に日本語で回答してください。"
 
@@ -20,52 +23,63 @@ def paired_comparison(df):
 
     n = len(df)
 
-    comparison_df = pd.DataFrame(columns=["sentence1", "sentence2", "result"])
+    set_seed(default_seed)
 
-    for i in range(n):
-        for j in range(n):
+    seed_ls =[random.randint(0, 10000) for i in range(evaluater_num)]
 
-            text = f"""
-            以下の二つの文章の内、どちらの方が青春を感じる文章か答えてください。回答は必ずA、Bのどちらかで回答してください。\n
-            A:{df.iloc[i,:]["sentence"]}\n
-            B:{df.iloc[j,:]["sentence"]}\n
-            """
+    comparison_df = pd.DataFrame()
 
-            messages = [
-                {"role": "system", "content": DEFAULT_SYSTEM_PROMPT},
-                {"role": "user", "content": text},
-            ]
+    for seed in seed_ls:
+        for i in range(n):
+            for j in range(n):
 
-            prompt = tokenizer.apply_chat_template(
-                messages,
-                tokenize=False,
-                add_generation_prompt=True
-            )
+                set_seed(seed)
 
-            token_ids = tokenizer.encode(
-                prompt, add_special_tokens=False, return_tensors="pt"
-            )
+                text = f"""
+                以下の二つの文章の内、どちらの方がより青春的である文章と思うかを答えてください。\n
+                A:{df.iloc[i,:]["sentence"]}\n
+                B:{df.iloc[j,:]["sentence"]}\n
+                回答は必ずA、Bのどちらかで回答してください。\n
+                """
 
-            with torch.no_grad():
-                output_ids = model.generate(
-                    token_ids.to(model.device),
-                    max_new_tokens=1200,
-                    do_sample=True,
-                    temperature=0.6,
-                    top_p=0.9,
+                messages = [
+                    {"role": "system", "content": DEFAULT_SYSTEM_PROMPT},
+                    {"role": "user", "content": text},
+                ]
+
+                prompt = tokenizer.apply_chat_template(
+                    messages,
+                    tokenize=False,
+                    add_generation_prompt=True
                 )
 
-            output = tokenizer.decode(
-                output_ids.tolist()[0][token_ids.size(1):], skip_special_tokens=True
-            )
+                token_ids = tokenizer.encode(
+                    prompt, add_special_tokens=False, return_tensors="pt"
+                )
 
-            print(output)
+                with torch.no_grad():
+                    output_ids = model.generate(
+                        token_ids.to(model.device),
+                        max_new_tokens=1200,
+                        do_sample=True,
+                        temperature=0.6,
+                        top_p=0.9,
+                    )
 
-            print(f"{df.iloc[i,:]['sentence']} vs {df.iloc[j,:]['sentence']}")
-            print(comparison_df.columns)
+                output = tokenizer.decode(
+                    output_ids.tolist()[0][token_ids.size(1):], skip_special_tokens=True
+                )
 
-            temp = pd.Series([df.iloc[i,:]["sentence"], df.iloc[j,:]["sentence"], output])
+                print(output)
 
-            comparison_df = pd.concat([comparison_df, temp], ignore_index=True, axis=1)
+                print(f"{df.iloc[i,:]['sentence']} vs {df.iloc[j,:]['sentence']}")
+
+                temp = pd.DataFrame(
+                    [[seed, i, j, df.iloc[i,:]["sentence"], df.iloc[j,:]["sentence"], output]], 
+                )
+
+                comparison_df = pd.concat([comparison_df, temp], axis=0, ignore_index=True)
+            
+    comparison_df.columns = ["seed", "A_index","B_index","sentenceA", "sentenceB", "result"]
 
     return comparison_df
