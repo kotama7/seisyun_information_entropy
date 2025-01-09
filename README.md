@@ -70,12 +70,7 @@ pip install -r requirement.txt
 
 ### Usage
 
-To calculate Seisyun Information Entropy for a given text, run:
-```bash
-python main.py --input "Your text here"
-```
-
-For batch processing, ensure your input data is formatted appropriately and run:
+For testing the result of thesis, run:
 ```bash
 python main.py 
 ```
