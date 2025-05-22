@@ -82,3 +82,23 @@ Experimental results demonstrated a weak positive correlation (\(r = 0.333\)) be
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Document Availability
+
+The complete manuscript is accessible online at the following address:
+
+https://web.cshe.nagoya-u.ac.jp/support/student/contest/img/2024_kotama.pdf
+
+## References
+
+If you use this work, please cite:
+
+```bibtex
+@unpublished{kotama:seisyun_entropy_llm,
+  author        = {Takanori Kotama},
+  title         = {A Quantitative Definition of Youth Using Large Language Models},
+  year          = {2025},
+  note          = {Award-winning paper of the Nagoya University Student Paper Contest (Encouragement Prize), presented in 2025},
+  url           = {https://web.cshe.nagoya-u.ac.jp/support/student/contest/img/2024_kotama.pdf}
+}
+```
